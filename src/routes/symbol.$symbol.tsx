@@ -81,15 +81,6 @@ async function fetchSymbolAnalysis(data: { symbol: string }) {
 }
 
 export const Route = createFileRoute("/symbol/$symbol")({
-  head: ({ params }) => ({
-    meta: [
-      { title: `${params.symbol} — Full S/R & Trend Analysis` },
-      {
-        name: "description",
-        content: `Detailed support, resistance, trend and turning points for ${params.symbol} across 5 timeframes.`,
-      },
-    ],
-  }),
   component: SymbolPage,
   errorComponent: ({ error, reset }) => {
     const router = useRouter();

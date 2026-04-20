@@ -8,16 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Loader2, RefreshCw, TrendingDown, TrendingUp, Minus, ArrowUpRight, ArrowDownRight } from "lucide-react";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Bybit S/R Scanner — Strong Levels & Trend Detection" },
-      {
-        name: "description",
-        content:
-          "Live Bybit scanner finding the strongest support/resistance the price is heading toward across 5m, 15m, 1h, 4h, and daily timeframes.",
-      },
-    ],
-  }),
   component: Index,
 });
 
