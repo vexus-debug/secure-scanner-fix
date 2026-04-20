@@ -1,5 +1,4 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, ArrowDownRight, ArrowUpRight, Loader2, Minus, TrendingDown, TrendingUp, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -34,54 +33,52 @@ type TfAnalysis = {
   heading: ZoneOut | null;
 };
 
-const fetchSymbolAnalysis = createServerFn({ method: "POST" })
-  .inputValidator((d: { symbol: string }) => d)
-  .handler(async ({ data }) => {
-    const { symbol } = data;
-    const out: TfAnalysis[] = [];
-    for (const tfDef of TIMEFRAMES) {
-      const url = `https://api.bybit.com/v5/market/kline?category=linear&symbol=${symbol}&interval=${tfDef.bybit}&limit=${tfDef.limit}`;
-      const res = await fetch(url);
-      if (!res.ok) continue;
-      const json = (await res.json()) as { result: { list: string[][] } };
-      const klines: Kline[] = json.result.list
-        .map((r) => ({
-          open: parseFloat(r[1]),
-          high: parseFloat(r[2]),
-          low: parseFloat(r[3]),
-          close: parseFloat(r[4]),
-          volume: parseFloat(r[5]),
-        }))
-        .reverse();
-      if (klines.length < 60) continue;
-      const last = klines[klines.length - 1];
-      const dir = shortTermDirection(klines, 5);
-      const trend = detectTrend(klines);
-      const zones = findSRZones(klines, last.close, {
-        tolerancePct: 0.004,
-        minTouches: 4,
-        lookback: 3,
-      });
-      const enriched: ZoneOut[] = zones.map((z) => ({
-        ...z,
-        sharpTurnPct: sharpTurnScore(klines, z.level),
-        distancePct: ((z.level - last.close) / last.close) * 100,
-      }));
-      const heading = nearestHeadingZone(zones, last.close, dir, klines);
-      const headingOut = heading
-        ? enriched.find((z) => z.level === heading.level) ?? null
-        : null;
-      out.push({
-        tf: tfDef.tf,
-        currentPrice: last.close,
-        direction: dir,
-        trend,
-        zones: enriched,
-        heading: headingOut,
-      });
-    }
-    return { symbol, analyses: out };
-  });
+async function fetchSymbolAnalysis(data: { symbol: string }) {
+  const { symbol } = data;
+  const out: TfAnalysis[] = [];
+  for (const tfDef of TIMEFRAMES) {
+    const url = `https://api.bybit.com/v5/market/kline?category=linear&symbol=${symbol}&interval=${tfDef.bybit}&limit=${tfDef.limit}`;
+    const res = await fetch(url);
+    if (!res.ok) continue;
+    const json = (await res.json()) as { result: { list: string[][] } };
+    const klines: Kline[] = json.result.list
+      .map((r) => ({
+        open: parseFloat(r[1]),
+        high: parseFloat(r[2]),
+        low: parseFloat(r[3]),
+        close: parseFloat(r[4]),
+        volume: parseFloat(r[5]),
+      }))
+      .reverse();
+    if (klines.length < 60) continue;
+    const last = klines[klines.length - 1];
+    const dir = shortTermDirection(klines, 5);
+    const trend = detectTrend(klines);
+    const zones = findSRZones(klines, last.close, {
+      tolerancePct: 0.004,
+      minTouches: 4,
+      lookback: 3,
+    });
+    const enriched: ZoneOut[] = zones.map((z) => ({
+      ...z,
+      sharpTurnPct: sharpTurnScore(klines, z.level),
+      distancePct: ((z.level - last.close) / last.close) * 100,
+    }));
+    const heading = nearestHeadingZone(zones, last.close, dir, klines);
+    const headingOut = heading
+      ? enriched.find((z) => z.level === heading.level) ?? null
+      : null;
+    out.push({
+      tf: tfDef.tf,
+      currentPrice: last.close,
+      direction: dir,
+      trend,
+      zones: enriched,
+      heading: headingOut,
+    });
+  }
+  return { symbol, analyses: out };
+}
 
 export const Route = createFileRoute("/symbol/$symbol")({
   head: ({ params }) => ({
@@ -125,7 +122,7 @@ function SymbolPage() {
 
   useEffect(() => {
     setLoading(true);
-    fetchSymbolAnalysis({ data: { symbol } })
+    fetchSymbolAnalysis({ symbol })
       .then((d) => setData(d))
       .finally(() => setLoading(false));
   }, [symbol]);
