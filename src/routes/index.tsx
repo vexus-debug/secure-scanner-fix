@@ -8,16 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Loader2, RefreshCw, TrendingDown, TrendingUp, Minus, ArrowUpRight, ArrowDownRight } from "lucide-react";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Bybit S/R Scanner — Strong Levels & Trend Detection" },
-      {
-        name: "description",
-        content:
-          "Live Bybit scanner finding the strongest support/resistance the price is heading toward across 5m, 15m, 1h, 4h, and daily timeframes.",
-      },
-    ],
-  }),
   component: Index,
 });
 
@@ -83,7 +73,8 @@ function Index() {
   const triggerScan = async () => {
     setScanning(true);
     try {
-      await fetch("/hooks/scan-bybit", { method: "POST" });
+      // Server-side scan endpoint not available in SPA mode.
+      // Trigger your scan via Supabase Edge Function or external cron.
       await fetchData();
     } finally {
       setScanning(false);
