@@ -73,7 +73,8 @@ function Index() {
   const triggerScan = async () => {
     setScanning(true);
     try {
-      await fetch("/hooks/scan-bybit", { method: "POST" });
+      // Server-side scan endpoint not available in SPA mode.
+      // Trigger your scan via Supabase Edge Function or external cron.
       await fetchData();
     } finally {
       setScanning(false);
